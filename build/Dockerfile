@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM alpine:3.10.1
+FROM debian:10
 
-RUN apk add --update bash curl
+RUN apt update --yes && apt install --yes bash curl
 
-COPY ./bin/linux-amd64/etcdbrctl /usr/local/bin/etcdbrctl
+COPY ./bin/etcdbrctl /usr/local/bin/etcdbrctl
 WORKDIR /
 ENTRYPOINT ["/usr/local/bin/etcdbrctl"]

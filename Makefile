@@ -13,7 +13,7 @@
 # limitations under the License.
 
 VERSION             := $(shell cat VERSION)
-REGISTRY            := eu.gcr.io/gardener-project/gardener
+REGISTRY            := registry.fi-ts.io/gardener
 IMAGE_REPOSITORY    := $(REGISTRY)/etcdbrctl
 IMAGE_TAG           := $(VERSION)
 BUILD_DIR           := build

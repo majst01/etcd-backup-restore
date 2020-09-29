@@ -78,7 +78,11 @@ func (r *Restorer) Restore(ro RestoreOptions) error {
 		e.Close()
 	}()
 
-	client, err := clientv3.NewFromURL(e.Clients[0].Addr().String())
+	url := e.Clients[0].Addr().String()
+	client, err := clientv3.New(clientv3.Config{
+		Endpoints:          []string{url},
+		MaxCallSendMsgSize: 5 * 1024 * 1024,
+	})
 	if err != nil {
 		return err
 	}
