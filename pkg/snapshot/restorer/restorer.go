@@ -325,6 +325,7 @@ func startEmbeddedEtcd(logger *logrus.Entry, ro RestoreOptions) (*embed.Etcd, er
 	cfg.InitialCluster = cfg.InitialClusterFromName(cfg.Name)
 	cfg.QuotaBackendBytes = ro.Config.EmbeddedEtcdQuotaBytes
 	cfg.MaxRequestBytes = 5 * 1024 * 1024
+	cfg.MaxTxnOps = 1024
 	e, err := embed.StartEtcd(cfg)
 	if err != nil {
 		return nil, err
