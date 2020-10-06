@@ -15,6 +15,7 @@
 package initializer
 
 import (
+	"github.com/gardener/etcd-backup-restore/pkg/compress"
 	"github.com/gardener/etcd-backup-restore/pkg/initializer/validator"
 	"github.com/gardener/etcd-backup-restore/pkg/snapshot/restorer"
 	"github.com/gardener/etcd-backup-restore/pkg/snapstore"
@@ -31,9 +32,10 @@ type Config struct {
 // EtcdInitializer implements Initializer interface to perform validation and
 // data restore if required.
 type EtcdInitializer struct {
-	Validator *validator.DataValidator
-	Config    *Config
-	Logger    *logrus.Logger
+	Validator  *validator.DataValidator
+	Config     *Config
+	Logger     *logrus.Logger
+	Compressor *compress.Compressor
 }
 
 // Initializer is the interface for etcd initialization actions.

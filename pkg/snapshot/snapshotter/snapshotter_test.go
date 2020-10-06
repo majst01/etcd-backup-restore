@@ -67,7 +67,7 @@ var _ = Describe("Snapshotter", func() {
 					MaxBackups:               1,
 				}
 
-				_, err := NewSnapshotter(logger, snapshotterConfig, store, etcdConnectionConfig)
+				_, err := NewSnapshotter(logger, snapshotterConfig, store, etcdConnectionConfig, nil)
 				Expect(err).Should(HaveOccurred())
 			})
 		})
@@ -84,7 +84,7 @@ var _ = Describe("Snapshotter", func() {
 					MaxBackups:               1,
 				}
 
-				_, err := NewSnapshotter(logger, snapshotterConfig, store, etcdConnectionConfig)
+				_, err := NewSnapshotter(logger, snapshotterConfig, store, etcdConnectionConfig, nil)
 				Expect(err).ShouldNot(HaveOccurred())
 			})
 		})
@@ -116,7 +116,7 @@ var _ = Describe("Snapshotter", func() {
 					MaxBackups:               maxBackups,
 				}
 
-				ssr, err := NewSnapshotter(logger, snapshotterConfig, store, etcdConnectionConfig)
+				ssr, err := NewSnapshotter(logger, snapshotterConfig, store, etcdConnectionConfig, nil)
 				Expect(err).ShouldNot(HaveOccurred())
 
 				ctx, cancel := context.WithTimeout(testCtx, testTimeout)
@@ -151,7 +151,7 @@ var _ = Describe("Snapshotter", func() {
 						MaxBackups:               maxBackups,
 					}
 
-					ssr, err = NewSnapshotter(logger, snapshotterConfig, store, etcdConnectionConfig)
+					ssr, err = NewSnapshotter(logger, snapshotterConfig, store, etcdConnectionConfig, nil)
 					Expect(err).ShouldNot(HaveOccurred())
 					ctx, cancel := context.WithTimeout(testCtx, testTimeout)
 					defer cancel()
@@ -205,7 +205,7 @@ var _ = Describe("Snapshotter", func() {
 							MaxBackups:               maxBackups,
 						}
 
-						ssr, err = NewSnapshotter(logger, snapshotterConfig, store, etcdConnectionConfig)
+						ssr, err = NewSnapshotter(logger, snapshotterConfig, store, etcdConnectionConfig, nil)
 						Expect(err).ShouldNot(HaveOccurred())
 
 						ctx, cancel := context.WithTimeout(testCtx, testTimeout)
@@ -232,7 +232,7 @@ var _ = Describe("Snapshotter", func() {
 							MaxBackups:               maxBackups,
 						}
 
-						ssr, err = NewSnapshotter(logger, snapshotterConfig, store, etcdConnectionConfig)
+						ssr, err = NewSnapshotter(logger, snapshotterConfig, store, etcdConnectionConfig, nil)
 						Expect(err).ShouldNot(HaveOccurred())
 
 						_, err = ssr.TriggerDeltaSnapshot()
@@ -260,7 +260,7 @@ var _ = Describe("Snapshotter", func() {
 								MaxBackups:               maxBackups,
 							}
 
-							ssr, err = NewSnapshotter(logger, snapshotterConfig, store, etcdConnectionConfig)
+							ssr, err = NewSnapshotter(logger, snapshotterConfig, store, etcdConnectionConfig, nil)
 							Expect(err).ShouldNot(HaveOccurred())
 							populatorCtx, cancelPopulator := context.WithTimeout(testCtx, testTimeout)
 							defer cancelPopulator()
@@ -298,7 +298,7 @@ var _ = Describe("Snapshotter", func() {
 							// populating etcd so that snapshots will be taken
 							go utils.PopulateEtcdWithWaitGroup(populatorCtx, wg, logger, etcdConnectionConfig.Endpoints, nil)
 
-							ssr, err = NewSnapshotter(logger, snapshotterConfig, store, etcdConnectionConfig)
+							ssr, err = NewSnapshotter(logger, snapshotterConfig, store, etcdConnectionConfig, nil)
 							Expect(err).ShouldNot(HaveOccurred())
 							ssrCtx := utils.ContextWithWaitGroup(testCtx, wg)
 							err = ssr.Run(ssrCtx.Done(), true)
@@ -436,7 +436,7 @@ var _ = Describe("Snapshotter", func() {
 					MaxBackups:               maxBackups,
 				}
 
-				ssr, err := NewSnapshotter(logger, snapshotterConfig, store, etcdConnectionConfig)
+				ssr, err := NewSnapshotter(logger, snapshotterConfig, store, etcdConnectionConfig, nil)
 				Expect(err).ShouldNot(HaveOccurred())
 
 				gcCtx, cancel := context.WithTimeout(testCtx, testTimeout)
@@ -466,7 +466,7 @@ var _ = Describe("Snapshotter", func() {
 					MaxBackups:               maxBackups,
 				}
 
-				ssr, err := NewSnapshotter(logger, snapshotterConfig, store, etcdConnectionConfig)
+				ssr, err := NewSnapshotter(logger, snapshotterConfig, store, etcdConnectionConfig, nil)
 				Expect(err).ShouldNot(HaveOccurred())
 
 				gcCtx, cancel := context.WithTimeout(testCtx, testTimeout)

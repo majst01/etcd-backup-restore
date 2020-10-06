@@ -19,6 +19,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gardener/etcd-backup-restore/pkg/compress"
 	"github.com/gardener/etcd-backup-restore/pkg/wrappers"
 
 	"github.com/coreos/etcd/clientv3"
@@ -79,6 +80,7 @@ type Snapshotter struct {
 	SsrStateMutex      *sync.Mutex
 	SsrState           State
 	lastEventRevision  int64
+	compressor         *compress.Compressor
 }
 
 // Config holds the snapshotter config.
@@ -89,6 +91,7 @@ type Config struct {
 	GarbageCollectionPeriod  wrappers.Duration `json:"garbageCollectionPeriod,omitempty"`
 	GarbageCollectionPolicy  string            `json:"garbageCollectionPolicy,omitempty"`
 	MaxBackups               uint              `json:"maxBackups,omitempty"`
+	CompressionMethod        string            `json:"compressionMethod,omitempty"`
 }
 
 // event is wrapper over etcd event to keep track of time of event

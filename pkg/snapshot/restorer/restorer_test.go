@@ -78,7 +78,7 @@ var _ = Describe("Running Restorer", func() {
 			baseSnapshot, deltaSnapList, err = miscellaneous.GetLatestFullSnapshotAndDeltaSnapList(store)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			rstr = NewRestorer(store, logger)
+			rstr = NewRestorer(store, logger, nil)
 			restoreOpts = RestoreOptions{
 				Config: &RestorationConfig{
 					RestoreDataDir:           etcdDir,
@@ -241,7 +241,7 @@ var _ = Describe("Running Restorer", func() {
 				logger.Infof("No of delta snapshots: %d", deltaSnapList.Len())
 				logger.Infof("Base snapshot is %v", baseSnapshot)
 
-				rstr = NewRestorer(store, logger)
+				rstr = NewRestorer(store, logger, nil)
 				restoreOpts := RestoreOptions{
 					Config:        restorationConfig,
 					DeltaSnapList: deltaSnapList,
@@ -281,7 +281,7 @@ var _ = Describe("Running Restorer", func() {
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(deltaSnapList.Len()).Should(BeZero())
 
-				rstr = NewRestorer(store, logger)
+				rstr = NewRestorer(store, logger, nil)
 
 				restoreOpts := RestoreOptions{
 					Config:        restorationConfig,
@@ -323,7 +323,7 @@ var _ = Describe("Running Restorer", func() {
 				logger.Infof("Removed snapshot to cause corruption %s", snapshotToRemove)
 				Expect(err).ShouldNot(HaveOccurred())
 
-				rstr = NewRestorer(store, logger)
+				rstr = NewRestorer(store, logger, nil)
 
 				restoreOpts := RestoreOptions{
 					Config:        restorationConfig,
@@ -358,7 +358,7 @@ var _ = Describe("Running Restorer", func() {
 				baseSnapshot, deltaSnapList, err = miscellaneous.GetLatestFullSnapshotAndDeltaSnapList(store)
 				Expect(err).ShouldNot(HaveOccurred())
 
-				rstr = NewRestorer(store, logger)
+				rstr = NewRestorer(store, logger, nil)
 
 				restoreOpts := RestoreOptions{
 					Config:        restorationConfig,
@@ -404,7 +404,7 @@ var _ = Describe("Running Restorer", func() {
 				baseSnapshot, deltaSnapList, err = miscellaneous.GetLatestFullSnapshotAndDeltaSnapList(store)
 				Expect(err).ShouldNot(HaveOccurred())
 
-				rstr = NewRestorer(store, logger)
+				rstr = NewRestorer(store, logger, nil)
 
 				restoreOpts := RestoreOptions{
 					Config:        restorationConfig,

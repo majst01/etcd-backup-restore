@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/coreos/etcd/pkg/types"
+	"github.com/gardener/etcd-backup-restore/pkg/compress"
 	"github.com/gardener/etcd-backup-restore/pkg/miscellaneous"
 	"github.com/gardener/etcd-backup-restore/pkg/snapshot/restorer"
 	"github.com/gardener/etcd-backup-restore/pkg/snapstore"
@@ -72,7 +73,16 @@ func NewRestoreCommand(ctx context.Context) *cobra.Command {
 				return
 			}
 
-			rs := restorer.NewRestorer(store, logrus.NewEntry(logger))
+			var comp *compress.Compressor
+			if opts.restorationConfig.CompressionMethod != "" && opts.restorationConfig.CompressionMethod != "none" {
+				comp, err = compress.New(opts.restorationConfig.CompressionMethod)
+				if err != nil {
+					logger.Fatalf("failed to get compression configured: %v", err)
+					return
+				}
+			}
+
+			rs := restorer.NewRestorer(store, logrus.NewEntry(logger), comp)
 
 			options := &restorer.RestoreOptions{
 				Config:        opts.restorationConfig,

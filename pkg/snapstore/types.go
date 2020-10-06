@@ -105,6 +105,8 @@ type Config struct {
 	MaxParallelChunkUploads uint `json:"maxParallelChunkUploads,omitempty"`
 	// Temporary Directory
 	TempDir string `json:"tempDir,omitempty"`
+	// CompressionMethod defines how backups should compressed
+	CompressionMethod string `json:"compressionMethod,omitempty"`
 }
 
 type chunk struct {

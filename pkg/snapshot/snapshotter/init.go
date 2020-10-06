@@ -43,6 +43,7 @@ func (c *Config) AddFlags(fs *flag.FlagSet) {
 	fs.DurationVar(&c.GarbageCollectionPeriod.Duration, "garbage-collection-period", c.GarbageCollectionPeriod.Duration, "Period for garbage collecting old backups")
 	fs.StringVar(&c.GarbageCollectionPolicy, "garbage-collection-policy", c.GarbageCollectionPolicy, "Policy for garbage collecting old backups")
 	fs.UintVarP(&c.MaxBackups, "max-backups", "m", c.MaxBackups, "maximum number of previous backups to keep")
+	fs.StringVar(&c.CompressionMethod, "compression-method", c.CompressionMethod, "enable compression and define compression method, must be one of none|tar|targz|tarlz4")
 }
 
 // Validate validates the config.
@@ -59,6 +60,12 @@ func (c *Config) Validate() error {
 
 	if c.DeltaSnapshotPeriod.Duration < deltaSnapshotIntervalThreshold {
 		logrus.Infof("Found delta snapshot interval %s less than 1 second. Disabling delta snapshotting. ", c.DeltaSnapshotPeriod)
+	}
+
+	switch c.CompressionMethod {
+	case "", "none", "tar", "targz", "tarlz4":
+	default:
+		return fmt.Errorf("Invalid compression-method:%q", c.CompressionMethod)
 	}
 
 	if c.DeltaSnapshotMemoryLimit < 1 {

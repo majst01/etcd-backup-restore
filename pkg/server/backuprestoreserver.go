@@ -21,6 +21,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/gardener/etcd-backup-restore/pkg/compress"
 	"github.com/gardener/etcd-backup-restore/pkg/errors"
 	"github.com/gardener/etcd-backup-restore/pkg/metrics"
 	"github.com/prometheus/client_golang/prometheus"
@@ -71,10 +72,19 @@ func (b *BackupRestoreServer) Run(ctx context.Context) error {
 		b.logger.Fatalf("failed creating url map for restore cluster: %v", err)
 	}
 
+	var comp *compress.Compressor
+	if b.config.RestorationConfig.CompressionMethod != "" && b.config.RestorationConfig.CompressionMethod != "none" {
+		comp, err = compress.New(b.config.RestorationConfig.CompressionMethod)
+		if err != nil {
+			return err
+		}
+	}
+
 	options := &restorer.RestoreOptions{
 		Config:      b.config.RestorationConfig,
 		ClusterURLs: clusterURLsMap,
 		PeerURLs:    peerURLs,
+		Compressor:  comp,
 	}
 
 	if b.config.SnapstoreConfig == nil || len(b.config.SnapstoreConfig.Provider) == 0 {
@@ -82,7 +92,7 @@ func (b *BackupRestoreServer) Run(ctx context.Context) error {
 		b.runServerWithoutSnapshotter(ctx, options)
 		return nil
 	}
-	return b.runServerWithSnapshotter(ctx, options)
+	return b.runServerWithSnapshotter(ctx, options, comp)
 }
 
 // startHTTPServer creates and starts the HTTP handler
@@ -131,7 +141,7 @@ func (b *BackupRestoreServer) runServerWithoutSnapshotter(ctx context.Context, r
 
 // runServerWithoutSnapshotter runs the etcd-backup-restore
 // for the case where snapshotter is configured correctly
-func (b *BackupRestoreServer) runServerWithSnapshotter(ctx context.Context, restoreOpts *restorer.RestoreOptions) error {
+func (b *BackupRestoreServer) runServerWithSnapshotter(ctx context.Context, restoreOpts *restorer.RestoreOptions, comp *compress.Compressor) error {
 	ackCh := make(chan struct{})
 
 	etcdInitializer := initializer.NewInitializer(restoreOpts, b.config.SnapstoreConfig, b.logger.Logger)
@@ -143,7 +153,7 @@ func (b *BackupRestoreServer) runServerWithSnapshotter(ctx context.Context, rest
 	}
 
 	b.logger.Infof("Creating snapshotter...")
-	ssr, err := snapshotter.NewSnapshotter(b.logger, b.config.SnapshotterConfig, ss, b.config.EtcdConnectionConfig)
+	ssr, err := snapshotter.NewSnapshotter(b.logger, b.config.SnapshotterConfig, ss, b.config.EtcdConnectionConfig, comp)
 	if err != nil {
 		return err
 	}

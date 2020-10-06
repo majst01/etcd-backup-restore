@@ -46,6 +46,7 @@ func (c *RestorationConfig) AddFlags(fs *flag.FlagSet) {
 	fs.BoolVar(&c.SkipHashCheck, "skip-hash-check", c.SkipHashCheck, "ignore snapshot integrity hash value (required if copied from data directory)")
 	fs.UintVar(&c.MaxFetchers, "max-fetchers", c.MaxFetchers, "maximum number of threads that will fetch delta snapshots in parallel")
 	fs.Int64Var(&c.EmbeddedEtcdQuotaBytes, "embedded-etcd-quota-bytes", c.EmbeddedEtcdQuotaBytes, "maximum backend quota for the embedded etcd used for applying delta snapshots")
+	fs.StringVar(&c.CompressionMethod, "uncompression-method", c.CompressionMethod, "enable compression and define compression method, must be one of auto|none|tar|targz|tarlz4")
 }
 
 // Validate validates the config.
@@ -61,6 +62,11 @@ func (c *RestorationConfig) Validate() error {
 	}
 	if c.EmbeddedEtcdQuotaBytes <= 0 {
 		return fmt.Errorf("Etcd Quota size for etcd must be greater than 0")
+	}
+	switch c.CompressionMethod {
+	case "", "auto", "none", "tar", "targz", "tarlz4":
+	default:
+		return fmt.Errorf("Invalid compression-method:%q", c.CompressionMethod)
 	}
 	c.RestoreDataDir = path.Clean(c.RestoreDataDir)
 	return nil

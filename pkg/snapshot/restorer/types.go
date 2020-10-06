@@ -20,6 +20,7 @@ import (
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/pkg/types"
+	"github.com/gardener/etcd-backup-restore/pkg/compress"
 	"github.com/gardener/etcd-backup-restore/pkg/snapstore"
 	"github.com/sirupsen/logrus"
 )
@@ -37,8 +38,9 @@ const (
 
 // Restorer is a struct for etcd data directory restorer
 type Restorer struct {
-	logger *logrus.Entry
-	store  snapstore.SnapStore
+	logger     *logrus.Entry
+	store      snapstore.SnapStore
+	compressor *compress.Compressor
 }
 
 // RestoreOptions hold all snapshot restore related fields
@@ -50,6 +52,7 @@ type RestoreOptions struct {
 	// Base full snapshot + delta snapshots to restore from
 	BaseSnapshot  snapstore.Snapshot
 	DeltaSnapList snapstore.SnapList
+	Compressor    *compress.Compressor
 }
 
 // RestorationConfig holds the restoration configuration.
@@ -63,6 +66,7 @@ type RestorationConfig struct {
 	SkipHashCheck            bool     `json:"skipHashCheck,omitempty"`
 	MaxFetchers              uint     `json:"maxFetchers,omitempty"`
 	EmbeddedEtcdQuotaBytes   int64    `json:"embeddedEtcdQuotaBytes,omitempty"`
+	CompressionMethod        string   `json:"compressionMethod,omitempty"`
 }
 
 type initIndex int
@@ -127,7 +131,7 @@ func DeepCopyURL(in *url.URL) *url.URL {
 	*out = *in
 	if in.User != nil {
 		in, out := &in.User, &out.User
-		*out = new (url.Userinfo)
+		*out = new(url.Userinfo)
 		*out = *in
 	}
 	return out

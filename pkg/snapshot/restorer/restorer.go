@@ -28,6 +28,7 @@ import (
 	"path"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"sync"
 	"time"
 
@@ -47,15 +48,17 @@ import (
 	"github.com/coreos/etcd/store"
 	"github.com/coreos/etcd/wal"
 	"github.com/coreos/etcd/wal/walpb"
+	"github.com/gardener/etcd-backup-restore/pkg/compress"
 	"github.com/gardener/etcd-backup-restore/pkg/snapstore"
 	"github.com/sirupsen/logrus"
 )
 
 // NewRestorer returns the restorer object.
-func NewRestorer(store snapstore.SnapStore, logger *logrus.Entry) *Restorer {
+func NewRestorer(store snapstore.SnapStore, logger *logrus.Entry, comp *compress.Compressor) *Restorer {
 	return &Restorer{
-		logger: logger.WithField("actor", "restorer"),
-		store:  store,
+		logger:     logger.WithField("actor", "restorer"),
+		store:      store,
+		compressor: comp,
 	}
 }
 
@@ -424,7 +427,7 @@ func (r *Restorer) fetchSnaps(fetcherIndex int, fetcherInfoCh <-chan fetcherInfo
 		default:
 			r.logger.Infof("Fetcher #%d fetching delta snapshot %s", fetcherIndex+1, path.Join(fetcherInfo.Snapshot.SnapDir, fetcherInfo.Snapshot.SnapName))
 
-			eventsData, err := getEventsDataFromDeltaSnapshot(r.store, fetcherInfo.Snapshot)
+			eventsData, err := getEventsDataFromDeltaSnapshot(r.store, fetcherInfo.Snapshot, r.compressor)
 			if err != nil {
 				errCh <- fmt.Errorf("failed to read events data from delta snapshot %s : %v", fetcherInfo.Snapshot.SnapName, err)
 				applierInfoCh <- applierInfo{SnapIndex: -1} // cannot use close(ch) as concurrent fetchSnaps routines might try to send on channel, causing a panic
@@ -530,7 +533,7 @@ func applyEventsAndVerify(client *clientv3.Client, events []event, snap *snapsto
 // applyFirstDeltaSnapshot applies the events from first delta snapshot to etcd.
 func (r *Restorer) applyFirstDeltaSnapshot(client *clientv3.Client, snap snapstore.Snapshot) error {
 	r.logger.Infof("Applying first delta snapshot %s", path.Join(snap.SnapDir, snap.SnapName))
-	events, err := getEventsFromDeltaSnapshot(r.store, snap)
+	events, err := getEventsFromDeltaSnapshot(r.store, snap, r.compressor)
 	if err != nil {
 		return fmt.Errorf("failed to read events from delta snapshot %s : %v", snap.SnapName, err)
 	}
@@ -559,8 +562,8 @@ func (r *Restorer) applyFirstDeltaSnapshot(client *clientv3.Client, snap snapsto
 }
 
 // getEventsFromDeltaSnapshot returns the events from delta snapshot from snap store.
-func getEventsFromDeltaSnapshot(store snapstore.SnapStore, snap snapstore.Snapshot) ([]event, error) {
-	data, err := getEventsDataFromDeltaSnapshot(store, snap)
+func getEventsFromDeltaSnapshot(store snapstore.SnapStore, snap snapstore.Snapshot, comp *compress.Compressor) ([]event, error) {
+	data, err := getEventsDataFromDeltaSnapshot(store, snap, comp)
 	if err != nil {
 		return nil, err
 	}
@@ -574,12 +577,20 @@ func getEventsFromDeltaSnapshot(store snapstore.SnapStore, snap snapstore.Snapsh
 }
 
 // getEventsDataFromDeltaSnapshot fetches the events data from delta snapshot from snap store.
-func getEventsDataFromDeltaSnapshot(store snapstore.SnapStore, snap snapstore.Snapshot) ([]byte, error) {
+func getEventsDataFromDeltaSnapshot(store snapstore.SnapStore, snap snapstore.Snapshot, comp *compress.Compressor) ([]byte, error) {
 	rc, err := store.Fetch(snap)
 	if err != nil {
 		return nil, err
 	}
 	defer rc.Close()
+
+	if comp != nil {
+		err := comp.Decompress(&snap)
+		if err != nil {
+			return nil, fmt.Errorf("unable to decompress snapshot:%v", err)
+		}
+		snap.SnapName = strings.TrimSuffix(snap.SnapName, comp.Extension())
+	}
 
 	buf := new(bytes.Buffer)
 	bufSize, err := buf.ReadFrom(rc)

@@ -81,7 +81,8 @@ func NewInitializer(options *restorer.RestoreOptions, snapstoreConfig *snapstore
 			},
 			Logger: logger,
 		},
-		Logger: logger,
+		Logger:     logger,
+		Compressor: options.Compressor,
 	}
 
 	return etcdInit
@@ -125,7 +126,7 @@ func (e *EtcdInitializer) restoreCorruptData() (bool, error) {
 		return false, fmt.Errorf("failed to delete previous temporary data directory: %v", err)
 	}
 
-	rs := restorer.NewRestorer(store, logrus.NewEntry(logger))
+	rs := restorer.NewRestorer(store, logrus.NewEntry(logger), e.Compressor)
 	if err := rs.Restore(tempRestoreOptions); err != nil {
 		err = fmt.Errorf("Failed to restore snapshot: %v", err)
 		return false, err

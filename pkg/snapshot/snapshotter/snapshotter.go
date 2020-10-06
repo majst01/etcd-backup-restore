@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/coreos/etcd/clientv3"
+	"github.com/gardener/etcd-backup-restore/pkg/compress"
 	"github.com/gardener/etcd-backup-restore/pkg/errors"
 	"github.com/gardener/etcd-backup-restore/pkg/etcdutil"
 	"github.com/gardener/etcd-backup-restore/pkg/metrics"
@@ -37,7 +38,7 @@ import (
 )
 
 // NewSnapshotter returns the snapshotter object.
-func NewSnapshotter(logger *logrus.Entry, config *Config, store snapstore.SnapStore, etcdConnectionConfig *etcdutil.EtcdConnectionConfig) (*Snapshotter, error) {
+func NewSnapshotter(logger *logrus.Entry, config *Config, store snapstore.SnapStore, etcdConnectionConfig *etcdutil.EtcdConnectionConfig, comp *compress.Compressor) (*Snapshotter, error) {
 	sdl, err := cron.ParseStandard(config.FullSnapshotSchedule)
 	if err != nil {
 		// Ideally this should be validated before.
@@ -81,6 +82,7 @@ func NewSnapshotter(logger *logrus.Entry, config *Config, store snapstore.SnapSt
 		fullSnapshotAckCh:  make(chan result),
 		deltaSnapshotAckCh: make(chan result),
 		cancelWatch:        func() {},
+		compressor:         comp,
 	}, nil
 }
 
@@ -243,6 +245,15 @@ func (ssr *Snapshotter) takeFullSnapshot() (*snapstore.Snapshot, error) {
 		}
 		ssr.logger.Infof("Successfully opened snapshot reader on etcd")
 		s := snapstore.NewSnapshot(snapstore.SnapshotKindFull, 0, lastRevision)
+		if ssr.compressor != nil {
+			_, err := ssr.compressor.Compress(s)
+			if err != nil {
+				return nil, &errors.EtcdError{
+					Message: fmt.Sprintf("failed to compress snapshot: %v", err),
+				}
+			}
+			s.SnapName = s.SnapName + ssr.compressor.Extension()
+		}
 		startTime := time.Now()
 		if err := ssr.store.Save(*s, rc); err != nil {
 			timeTaken := time.Now().Sub(startTime).Seconds()

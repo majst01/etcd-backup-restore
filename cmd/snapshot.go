@@ -17,6 +17,7 @@ package cmd
 import (
 	"context"
 
+	"github.com/gardener/etcd-backup-restore/pkg/compress"
 	"github.com/gardener/etcd-backup-restore/pkg/defragmentor"
 
 	"github.com/gardener/etcd-backup-restore/pkg/snapshot/snapshotter"
@@ -49,7 +50,16 @@ storing snapshots on various cloud storage providers as well as local disk locat
 				logger.Fatalf("Failed to create snapstore from configured storage provider: %v", err)
 			}
 
-			ssr, err := snapshotter.NewSnapshotter(logger, opts.snapshotterConfig, ss, opts.etcdConnectionConfig)
+			var comp *compress.Compressor
+			if opts.snapshotterConfig.CompressionMethod != "" && opts.snapshotterConfig.CompressionMethod != "none" {
+				comp, err = compress.New(opts.snapshotterConfig.CompressionMethod)
+				if err != nil {
+					logger.Fatalf("failed to get compression configured: %v", err)
+					return
+				}
+			}
+
+			ssr, err := snapshotter.NewSnapshotter(logger, opts.snapshotterConfig, ss, opts.etcdConnectionConfig, comp)
 			if err != nil {
 				logger.Fatalf("Failed to create snapshotter: %v", err)
 			}
