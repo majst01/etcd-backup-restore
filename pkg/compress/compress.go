@@ -39,7 +39,7 @@ func New(method string) (*Compressor, error) {
 	return c, nil
 }
 
-// Compress the given backupFile and returns the full filename with the extension
+// Compress the given snapshot, SnapName is adjusted matching compression algorithm
 func (c *Compressor) Compress(snap *snapstore.Snapshot) error {
 	if !c.enabled {
 		return nil
@@ -52,12 +52,12 @@ func (c *Compressor) Compress(snap *snapstore.Snapshot) error {
 	return nil
 }
 
-// Decompress the given backupFile
+// Decompress the given snapshot, if snapshot is not compressed, nothing happens
 func (c *Compressor) Decompress(snap *snapstore.Snapshot) error {
 	if !c.enabled {
 		return nil
 	}
-	// skip decompression for snaps store without compression
+	// skip decompression for snaps stored without compression
 	if !isCompressed(snap) {
 		return nil
 	}
