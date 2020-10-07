@@ -246,13 +246,12 @@ func (ssr *Snapshotter) takeFullSnapshot() (*snapstore.Snapshot, error) {
 		ssr.logger.Infof("Successfully opened snapshot reader on etcd")
 		s := snapstore.NewSnapshot(snapstore.SnapshotKindFull, 0, lastRevision)
 		if ssr.compressor != nil {
-			_, err := ssr.compressor.Compress(s)
+			err := ssr.compressor.Compress(s)
 			if err != nil {
 				return nil, &errors.EtcdError{
 					Message: fmt.Sprintf("failed to compress snapshot: %v", err),
 				}
 			}
-			s.SnapName = s.SnapName + ssr.compressor.Extension()
 		}
 		startTime := time.Now()
 		if err := ssr.store.Save(*s, rc); err != nil {

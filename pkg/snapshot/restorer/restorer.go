@@ -28,7 +28,6 @@ import (
 	"path"
 	"path/filepath"
 	"reflect"
-	"strings"
 	"sync"
 	"time"
 
@@ -589,7 +588,6 @@ func getEventsDataFromDeltaSnapshot(store snapstore.SnapStore, snap snapstore.Sn
 		if err != nil {
 			return nil, fmt.Errorf("unable to decompress snapshot:%v", err)
 		}
-		snap.SnapName = strings.TrimSuffix(snap.SnapName, comp.Extension())
 	}
 
 	buf := new(bytes.Buffer)
