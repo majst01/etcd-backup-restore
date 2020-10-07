@@ -69,11 +69,6 @@ func (c *Compressor) Decompress(snap *snapstore.Snapshot) error {
 	return nil
 }
 
-// Extension returns the file extension of the configured compressor, depending on the method
-func (c *Compressor) Extension() string {
-	return c.extension
-}
-
 func isCompressed(snap *snapstore.Snapshot) bool {
 	compressed := false
 	for _, ext := range []string{".tar", ".tar.gz", ".tar.lz4"} {
